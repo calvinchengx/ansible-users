@@ -1,0 +1,36 @@
+---
+# add user as root
+- name: Make sure we have python2
+  raw: sudo pacman -S python2 --noconfirm
+
+# Easy-to-manage bash_profile layout
+- name: Create an easy-to-manage bash_profile layout in /etc/skel
+  sudo: true
+  template: src=../templates/bash_profile.j2 dest=/etc/skel/.bash_profile
+
+- name: .bash_profile.d in /etc/skel
+  sudo: true
+  file: path=/etc/skel/.bash_profile.d state=directory mode=700 
+
+- name: Touch default file in /etc/skel
+  sudo: true
+  file: path=/etc/skel/.bash_profile.d/default state=touch
+
+# For existing user, make sure we have the same bash_profile layout too
+- name: Use the same bash_profile for existing user
+  template: src=../templates/bash_profile.j2 dest=~/.bash_profile
+
+- name: Create .bash_profile.d for existing user 
+  file: path=~/.bash_profile.d state=directory mode=700 
+
+- name: Touch .bash_profile.d for existing user
+  file: path=~/.bash_profile.d/default state=touch
+
+# This new user will inherit all the templates set up in /etc/skel above
+- name: Create new user
+  raw: if ! id -u "deploy"; then sudo useradd -m -G wheel -s /bin/bash deploy; fi
+
+- name: Set authorized key for new user
+  sudo: true
+  remote_user: root
+  authorized_key: user=deploy key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
