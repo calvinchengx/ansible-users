@@ -28,9 +28,9 @@
 
 # This new user will inherit all the templates set up in /etc/skel above
 - name: Create new user
-  raw: if ! id -u "deploy"; then sudo useradd -m -G wheel -s /bin/bash deploy; fi
+  raw: if ! id -u "{{ deploy_user }}"; then sudo useradd -m -G wheel -s /bin/bash deploy; fi
 
 - name: Set authorized key for new user
   sudo: true
   remote_user: root
-  authorized_key: user=deploy key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
+  authorized_key: user={{ deploy_user }} key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}" 
